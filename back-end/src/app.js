@@ -508,58 +508,35 @@ app.post('/sessao', async(req, res) => {
         if(!filme_id || !sala_id || !data_hora || !preco) {
             return res.status(400).json ({
                 sucesso: false,
-                mensagem: 'Id do filme, id da sala, data_hora e preço é obrigatórios'
+                mensagem: 'Id do filme, id da sala, data_hora e preço são obrigatórios'
             })
         }
 
-        if(!filme_id || isNaN(filme_id)) {
+        if(isNaN(filme_id) || isNaN(sala_id) || isNaN(preco)) {
             return res.status(400).json({
                 sucesso: false,
-                mensagem: 'ID filme inválido'
+                mensagem: 'IDs e preço devem ser números'
             })
         }
 
-        const filmeExiste = await queryAsync('SELECT * FROM sessao WHERE id = ?', [filme_id])
-
-        if(filmeExiste.length == 0) {
+        const filmeExiste = await queryAsync('SELECT id FROM filme WHERE id = ?', [filme_id])
+        if(filmeExiste.length === 0) {
             return res.status(404).json ({
                 sucesso: false,
                 mensagem: 'Filme não encontrado'
             })
         }
 
-        if(!sala_id || isNaN(sala_id)) {
-            return res.status(400).json({
-                sucesso: false,
-                mensagem: 'ID sala inválido'
-            })
-        }
-
-        const salaExiste = await queryAsync('SELECT * FROM sessao WHERE id = ?', [sala_id])
-
-        if(salaExiste.length == 0) {
+        const salaExiste = await queryAsync('SELECT id FROM sala WHERE id = ?', [sala_id])
+        if(salaExiste.length === 0) {
             return res.status(404).json ({
                 sucesso: false,
                 mensagem: 'Sala não encontrado'
             })
         }
 
-        if(typeof preco !== 'number' || preco <= 0) {
-            return res.status(400).json ({
-                sucesso: false,
-                mensagem: 'Preço deve ser um número positivo.'
-            })
-        }
-
-        const novaSessao = {
-            filme_id: filme_id,
-            sala_id: sala_id,
-            data_hora: data_hora,
-            preco: preco
-        } 
-
+        const novaSessao = { filme_id, sala_id, data_hora, preco } 
         const resultado = await queryAsync('INSERT INTO sessao SET ?',[novaSessao])
-            
         res.status(201).json ({
             sucesso: true,
             mensagem: 'Sessão cadastrada com sucesso',
@@ -567,7 +544,7 @@ app.post('/sessao', async(req, res) => {
         })
 
     } catch (erro) {
-        console.log('Erro ao salvar sessão:', erro)
+        console.error('Erro ao salvar sessão:', erro)
 
         res.status(500).json ({
             sucesso: false,
